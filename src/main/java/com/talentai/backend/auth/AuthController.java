@@ -1,5 +1,6 @@
 package com.talentai.backend.auth;
 
+import com.talentai.backend.candidate.Candidate; // <-- 1. AJOUTER CET IMPORT
 import com.talentai.backend.user.Role;
 import com.talentai.backend.user.User;
 import com.talentai.backend.user.UserRepository;
@@ -7,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional; // <--- AJOUT IMPORTANT
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -16,7 +17,7 @@ import java.util.Optional; // <--- AJOUT IMPORTANT
 public class AuthController {
 
     private final UserRepository userRepository;
-    // Pas de PasswordEncoder, comme vous l'avez demandé
+    // Pas de PasswordEncoder...
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -25,7 +26,21 @@ public class AuthController {
             user.setRole(Role.ROLE_CANDIDAT); // Définit un rôle par défaut
         }
 
+        // --- 2. AJOUTER CETTE LOGIQUE ---
+        // Si c'est un candidat, on crée son profil Candidat vide et on le lie
+        if (user.getRole() == Role.ROLE_CANDIDAT) {
+            Candidate newCandidate = Candidate.builder()
+                    .email(user.getEmail()) // Pré-remplit l'email
+                    .fullName(user.getUsername()) // Pré-remplit le nom
+                    .build();
+
+            user.setCandidate(newCandidate); // Lier l'utilisateur au candidat
+            newCandidate.setUser(user);     // Lier le candidat à l'utilisateur (essentiel pour la relation)
+        }
+        // --- FIN DE L'AJOUT ---
+
         // ⚠️ ATTENTION: Le mot de passe est enregistré en clair (non crypté)
+        // En sauvegardant l'utilisateur, JPA sauvegardera aussi le candidat grâce au "CascadeType.ALL"
         User savedUser = userRepository.save(user);
 
         // On renvoie le DTO LoginResponse
@@ -40,28 +55,20 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User loginDetails) {
 
-        // --- VOTRE CORRECTION (C'est correct) ---
         Optional<User> userOptional = userRepository.findByUsername(loginDetails.getUsername());
 
-        // --- NOUVELLE VÉRIFICATION CORRIGÉE ---
-
-        // 1. Vérifier si l'Optional est vide (l'utilisateur n'existe pas)
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
 
-        // 2. Si l'utilisateur existe, on le récupère de l'Optional
         User user = userOptional.get();
 
-        // 3. On vérifie le mot de passe (en clair, comme demandé)
-        // (La ligne `if (user == null ...)` est remplacée par ces deux vérifications)
         if (!loginDetails.getPassword().equals(user.getPassword())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
 
-        // Si tout est bon, on crée la réponse DTO
         LoginResponse response = new LoginResponse(
-                user.getId(),       // Jackson va transformer cela en "userId"
+                user.getId(),
                 user.getUsername(),
                 user.getRole()
         );

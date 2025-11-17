@@ -1,5 +1,6 @@
 package com.talentai.backend.user;
 
+import com.talentai.backend.candidate.Candidate;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,4 +17,8 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Candidate candidate;
+
 }

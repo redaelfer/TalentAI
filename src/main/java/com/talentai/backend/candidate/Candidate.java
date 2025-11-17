@@ -1,5 +1,6 @@
 package com.talentai.backend.candidate;
 
+import com.talentai.backend.user.User; // <-- 1. AJOUTER CET IMPORT
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,22 +14,23 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Candidate {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // L'ID sera fourni par l'Utilisateur
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId // Indique que cette relation UTILISE la clé primaire (partage l'ID)
+    @JoinColumn(name = "id") // Le nom de la colonne PK/FK sera "id"
+    private User user;
+    // --- FIN DE L'AJOUT ---
 
     private String fullName;
     private String email;
     private String titre;
     private String telephone;
 
-    // --- CORRECTION ---
-    // Les champs suivants sont requis par votre CandidateController
-    // pour la méthode downloadCv()
+    @Lob
+    @Column(length = 1000000)
+    private byte[] cvFile;
 
-    @Lob // Large Object
-    @Column(length = 1000000) // 1MB, augmentez si nécessaire
-    private byte[] cvFile; // Le contenu binaire du PDF
-
-    private String cvFileName; // Le nom du fichier (ex: "mon_cv.pdf")
-    private String cvContentType; // Le type MIME (ex: "application/pdf")
+    private String cvFileName;
+    private String cvContentType;
 }

@@ -5,8 +5,10 @@ import com.talentai.backend.evaluation.Evaluation;
 import com.talentai.backend.evaluation.EvaluationRepository;
 import com.talentai.backend.offer.Offer;
 import com.talentai.backend.offer.OfferRepository;
+import com.talentai.backend.user.User;
+import com.talentai.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.Loader; // <-- NOUVEL IMPORT
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
@@ -23,9 +25,8 @@ public class CandidateService {
     private final CandidateRepository candidateRepository;
     private final OfferRepository offerRepository;
     private final EvaluationRepository evaluationRepository;
-
-    // Service IA
     private final AiService aiService;
+    private final UserRepository userRepository; // <-- LIGNE AJOUTÉE
 
     public List<Candidate> all() {
         return candidateRepository.findAll();
@@ -106,14 +107,32 @@ public class CandidateService {
         return score;
     }
 
+    // --- DÉBUT DE LA CORRECTION ---
     public Candidate updateCandidate(Long id, CandidateRequest candidateRequest) {
-        Candidate existingCandidate = one(id);
+        // Au lieu de "one(id)", on utilise "findById" qui ne lève pas d'exception
+        Candidate existingCandidate = candidateRepository.findById(id).orElse(null);
+
+        if (existingCandidate == null) {
+            // Le profil n'existe pas, on le CRÉE
+            // 1. Trouver l'utilisateur parent
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id + ". Impossible de créer le profil candidat."));
+
+            // 2. Créer le nouveau profil candidat
+            existingCandidate = new Candidate();
+            existingCandidate.setId(user.getId()); // L'ID est partagé
+            existingCandidate.setUser(user);     // Lier à l'utilisateur
+        }
+
+        // Que le profil soit nouveau ou ancien, on applique les mises à jour
         existingCandidate.setFullName(candidateRequest.getFullName());
         existingCandidate.setEmail(candidateRequest.getEmail());
         existingCandidate.setTitre(candidateRequest.getTitre());
         existingCandidate.setTelephone(candidateRequest.getTelephone());
+
         return candidateRepository.save(existingCandidate);
     }
+    // --- FIN DE LA CORRECTION ---
 
 
     /**
