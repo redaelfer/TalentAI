@@ -6,13 +6,12 @@ import com.talentai.backend.evaluation.EvaluationRepository;
 import com.talentai.backend.offer.Offer;
 import com.talentai.backend.offer.OfferRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.Loader; // <-- NOUVEL IMPORT
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-// import java.io.ByteArrayInputStream; // <-- Cet import n'est plus nécessaire
 import java.io.IOException;
 import java.util.List;
 
@@ -28,24 +27,15 @@ public class CandidateService {
     // Service IA
     private final AiService aiService;
 
-    /**
-     * Renvoie la liste de tous les candidats (appelé par GET /api/candidates)
-     */
     public List<Candidate> all() {
         return candidateRepository.findAll();
     }
 
-    /**
-     * Renvoie un candidat par son ID (appelé par GET /api/candidates/{id})
-     */
     public Candidate one(Long id) {
         return candidateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidate not found with id: " + id));
     }
 
-    /**
-     * Crée un nouveau candidat (appelé par POST /api/candidates)
-     */
     public Candidate create(CandidateRequest req) {
         Candidate candidate = Candidate.builder()
                 .fullName(req.getFullName())
@@ -56,16 +46,11 @@ public class CandidateService {
         return candidateRepository.save(candidate);
     }
 
-    /**
-     * Attache un fichier CV à un candidat (appelé par POST /api/candidates/{id}/cv)
-     */
     public Candidate uploadCv(Long id, MultipartFile file) throws IOException {
-        Candidate candidate = one(id); // Réutilise la méthode 'one' pour trouver le candidat
-
+        Candidate candidate = one(id);
         candidate.setCvFile(file.getBytes());
         candidate.setCvFileName(file.getOriginalFilename());
         candidate.setCvContentType(file.getContentType());
-
         return candidateRepository.save(candidate);
     }
 
@@ -81,10 +66,14 @@ public class CandidateService {
             throw new RuntimeException("CV not found for candidate, cannot evaluate.");
         }
 
+        // --- DÉBUT DE LA NOUVELLE LOGIQUE ---
+
         // 1. Extraire le texte du PDF
         String cvText = extractTextFromPdf(candidate.getCvFile());
         if (cvText.isBlank()) {
             System.err.println("Avertissement: Impossible d'extraire le texte du PDF pour le candidat ID: " + candidateId);
+            // On peut retourner 0 directement si le CV est illisible
+            return 0;
         }
 
         // 2. Appeler Ollama (votre AiService)
@@ -102,6 +91,7 @@ public class CandidateService {
             System.err.println("Ollama a retourné une réponse non numérique: " + scoreResponse);
             // score reste 0 si le parsing échoue
         }
+        // --- FIN DE LA NOUVELLE LOGIQUE ---
 
 
         // 4. Sauvegarder cette évaluation dans la base de données
@@ -116,34 +106,31 @@ public class CandidateService {
         return score;
     }
 
-    // Note: La méthode "updateCandidate" n'est pas utilisée par votre
-    // CandidateController, mais elle est prête si vous ajoutez un endpoint PUT
     public Candidate updateCandidate(Long id, CandidateRequest candidateRequest) {
-        Candidate existingCandidate = one(id); // Réutilise la méthode 'one'
-
+        Candidate existingCandidate = one(id);
         existingCandidate.setFullName(candidateRequest.getFullName());
         existingCandidate.setEmail(candidateRequest.getEmail());
         existingCandidate.setTitre(candidateRequest.getTitre());
         existingCandidate.setTelephone(candidateRequest.getTelephone());
-
         return candidateRepository.save(existingCandidate);
     }
 
 
     /**
-     * Nouvelle méthode privée pour lire le texte d'un PDF en utilisant PDFBox 3.x
+     * Méthode privée pour lire le texte d'un PDF en utilisant PDFBox 3.x
      */
     private String extractTextFromPdf(byte[] pdfData) throws IOException {
         if (pdfData == null || pdfData.length == 0) {
             return "";
         }
 
-        // --- CORRECTION ---
-        // On passe 'pdfData' (un byte[]) directement, comme l'erreur le suggère
+        // On passe 'pdfData' (un byte[]) directement
         try (PDDocument document = Loader.loadPDF(pdfData)) {
             PDFTextStripper stripper = new PDFTextStripper();
             return stripper.getText(document);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'extraction du texte PDF: " + e.getMessage());
+            return ""; // Retourne une chaîne vide en cas d'échec
         }
-        // --- FIN CORRECTION ---
     }
 }

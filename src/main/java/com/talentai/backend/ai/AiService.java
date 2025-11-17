@@ -3,8 +3,9 @@ package com.talentai.backend.ai;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AiService {
@@ -22,38 +23,46 @@ public class AiService {
      */
     public String scoreCv(String cvText, String jobDescription) {
         String prompt = """
-                Tu es un assistant RH intelligent. 
-                Lis le CV suivant et donne un score de compatibilité (0 à 100) 
-                avec l’offre d’emploi ci-dessous, en te basant sur les compétences et l’expérience.
-
+                Tu es un recruteur technique expert.
+                Tâche : Évalue la compatibilité entre le CV fourni et l'offre d'emploi.
+                Critères : Compétences techniques, expérience professionnelle, formation.
+                
                 CV:
                 %s
-
-                Offre:
+                
+                Offre d'emploi:
                 %s
-
-                Donne seulement un nombre entier entre 0 et 100.
+                
+                Réponse : Donne UNIQUEMENT un score en nombre entier de 0 à 100.
+                Ne dis rien d'autre. Pas de "Le score est :", juste le nombre.
+                Exemple de réponse : 85
                 """.formatted(cvText, jobDescription);
 
         Map<String, Object> body = Map.of(
-                "model", "llama3",
-                "prompt", prompt
+                "model", "llama3", // Assurez-vous d'avoir 'llama3' d'installé sur Ollama
+                "prompt", prompt,
+                "stream", false // On demande une réponse complète, pas un flux
         );
 
-        StringBuilder response = new StringBuilder();
+        try {
+            Map<String, Object> response = client.post()
+                    .uri("/api/generate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block(); // .block() est ok pour un service interne simple
 
-        client.post()
-                .uri("/api/generate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(body)
-                .retrieve()
-                .bodyToFlux(Map.class)
-                .doOnNext(chunk -> {
-                    Object content = chunk.get("response");
-                    if (content != null) response.append(content.toString());
-                })
-                .blockLast();
+            if (response != null && response.containsKey("response")) {
+                String aiResponse = response.get("response").toString().trim();
+                System.out.println("Réponse brute d'Ollama: " + aiResponse); // Pour le débogage
+                return aiResponse;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'appel à Ollama: " + e.getMessage());
+            return "0"; // Retourne 0 en cas d'erreur de communication
+        }
 
-        return response.toString().trim();
+        return "0";
     }
 }
