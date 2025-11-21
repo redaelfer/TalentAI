@@ -1,42 +1,44 @@
-import React, { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./components/Login";
-import SignUp from "./components/SignUp";
-import RhDashboard from "./components/RhDashboard";
+import SignUp from "./components/SignUp"; // Assurez-vous que ce fichier existe
 import CandidateDashboard from "./components/CandidateDashboard";
-import CandidateProfile from "./components/CandidateProfile";
+import RhDashboard from "./components/RhDashboard";
 
-export default function App() {
-  const [role, setRole] = useState(localStorage.getItem("role"));
-  const [page, setPage] = useState("login");
+// Petit composant pour protéger les pages (redirection vers login si non connecté)
+const PrivateRoute = ({ children }) => {
+  const userId = localStorage.getItem("userId");
+  return userId ? children : <Navigate to="/login" />;
+};
 
+function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {!role && (
-          <>
-            {page === "login" && (
-              <Route
-                path="*"
-                element={<Login onLogin={setRole} onSignUp={() => setPage("signup")} />}
-              />
-            )}
-            {page === "signup" && (
-              <Route
-                path="*"
-                element={<SignUp onBackToLogin={() => setPage("login")} />}
-              />
-            )}
-          </>
-        )}
-        {role === "ROLE_RH" && <Route path="*" element={<RhDashboard />} />}
-        {role === "ROLE_CANDIDAT" && (
-          <>
-            <Route path="/" element={<CandidateDashboard />} />
-            <Route path="/profile" element={<CandidateProfile />} />
-          </>
-        )}
-      </Routes>
-    </BrowserRouter>
+    <Router>
+      <div className="App">
+        <Routes>
+          {/* Route par défaut : Dashboard Candidat */}
+          <Route path="/" element={
+            <PrivateRoute>
+              <CandidateDashboard />
+            </PrivateRoute>
+          } />
+
+          {/* Routes d'authentification */}
+          <Route path="/login" element={<Login />} />
+
+          {/* --- C'EST CETTE LIGNE QUI MANQUAIT POUR L'INSCRIPTION --- */}
+          <Route path="/sign-up" element={<SignUp />} />
+
+          {/* Dashboard RH */}
+          <Route path="/rh" element={
+            <PrivateRoute>
+              <RhDashboard />
+            </PrivateRoute>
+          } />
+        </Routes>
+      </div>
+    </Router>
   );
 }
+
+export default App;

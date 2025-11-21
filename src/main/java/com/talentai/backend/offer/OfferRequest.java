@@ -9,5 +9,6 @@ public record OfferRequest(
         String duree,
         String remuneration,
         String experience,
-        String typeContrat
+        String typeContrat,
+        Long rhId
 ) {}

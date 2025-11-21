@@ -1,13 +1,14 @@
 package com.talentai.backend.auth;
 
-import com.talentai.backend.candidate.Candidate; // <-- 1. AJOUTER CET IMPORT
-import com.talentai.backend.user.Role;
-import com.talentai.backend.user.User;
-import com.talentai.backend.user.UserRepository;
+import com.talentai.backend.candidate.Candidate;
+import com.talentai.backend.candidate.CandidateRepository;
+import com.talentai.backend.rh.Rh;
+import com.talentai.backend.rh.RhRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -16,63 +17,75 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
-    private final UserRepository userRepository;
-    // Pas de PasswordEncoder...
+    private final CandidateRepository candidateRepository;
+    private final RhRepository rhRepository;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
-        // S'assurer que le rôle n'est pas nul
-        if (user.getRole() == null) {
-            user.setRole(Role.ROLE_CANDIDAT); // Définit un rôle par défaut
+    // ==========================================
+    // ZONE CANDIDAT
+    // ==========================================
+
+    @PostMapping("/candidate/login")
+    public ResponseEntity<?> loginCandidate(@RequestBody Map<String, String> loginDetails) {
+        String username = loginDetails.get("username");
+        String password = loginDetails.get("password");
+
+        Optional<Candidate> candidateOpt = candidateRepository.findByUsername(username);
+
+        if (candidateOpt.isEmpty() || !candidateOpt.get().getPassword().equals(password)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Identifiants candidat incorrects"));
         }
 
-        // --- 2. AJOUTER CETTE LOGIQUE ---
-        // Si c'est un candidat, on crée son profil Candidat vide et on le lie
-        if (user.getRole() == Role.ROLE_CANDIDAT) {
-            Candidate newCandidate = Candidate.builder()
-                    .email(user.getEmail()) // Pré-remplit l'email
-                    .fullName(user.getUsername()) // Pré-remplit le nom
-                    .build();
-
-            user.setCandidate(newCandidate); // Lier l'utilisateur au candidat
-            newCandidate.setUser(user);     // Lier le candidat à l'utilisateur (essentiel pour la relation)
-        }
-        // --- FIN DE L'AJOUT ---
-
-        // ⚠️ ATTENTION: Le mot de passe est enregistré en clair (non crypté)
-        // En sauvegardant l'utilisateur, JPA sauvegardera aussi le candidat grâce au "CascadeType.ALL"
-        User savedUser = userRepository.save(user);
-
-        // On renvoie le DTO LoginResponse
-        LoginResponse response = new LoginResponse(
-                savedUser.getId(),
-                savedUser.getUsername(),
-                savedUser.getRole()
-        );
-        return ResponseEntity.ok(response);
+        Candidate c = candidateOpt.get();
+        return ResponseEntity.ok(Map.of(
+                "id", c.getId(),
+                "username", c.getUsername(),
+                "role", "ROLE_CANDIDAT"
+        ));
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody User loginDetails) {
+    @PostMapping("/candidate/register")
+    public ResponseEntity<?> registerCandidate(@RequestBody Candidate candidate) {
+        if (candidateRepository.findByUsername(candidate.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("Ce nom d'utilisateur existe déjà.");
+        }
+        // On initialise les champs vides pour éviter les null pointers plus tard
+        if (candidate.getFullName() == null) candidate.setFullName(candidate.getUsername());
 
-        Optional<User> userOptional = userRepository.findByUsername(loginDetails.getUsername());
+        candidateRepository.save(candidate);
+        return ResponseEntity.ok(Map.of("message", "Candidat inscrit avec succès"));
+    }
 
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+    // ==========================================
+    // ZONE RH (RECRUTEUR)
+    // ==========================================
+
+    @PostMapping("/rh/login")
+    public ResponseEntity<?> loginRh(@RequestBody Map<String, String> loginDetails) {
+        String username = loginDetails.get("username");
+        String password = loginDetails.get("password");
+
+        Optional<Rh> rhOpt = rhRepository.findByUsername(username);
+
+        if (rhOpt.isEmpty() || !rhOpt.get().getPassword().equals(password)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Identifiants RH incorrects"));
         }
 
-        User user = userOptional.get();
+        Rh rh = rhOpt.get();
+        return ResponseEntity.ok(Map.of(
+                "id", rh.getId(),
+                "username", rh.getUsername(),
+                "role", "ROLE_RH",
+                "nomEntreprise", rh.getNomEntreprise() != null ? rh.getNomEntreprise() : ""
+        ));
+    }
 
-        if (!loginDetails.getPassword().equals(user.getPassword())) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+    // C'est l'endpoint que vous m'avez demandé pour le RH
+    @PostMapping("/rh/register")
+    public ResponseEntity<?> registerRh(@RequestBody Rh rh) {
+        if (rhRepository.findByUsername(rh.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("Ce nom d'utilisateur RH existe déjà.");
         }
-
-        LoginResponse response = new LoginResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getRole()
-        );
-
-        return ResponseEntity.ok(response);
+        rhRepository.save(rh);
+        return ResponseEntity.ok(Map.of("message", "Compte RH créé avec succès pour " + rh.getNomEntreprise()));
     }
 }

@@ -1,65 +1,106 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { API } from "../api";
 
-function Login({ onLogin, onSignUp }) {
+export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("ROLE_CANDIDAT");
+  const [isRh, setIsRh] = useState(false); // <-- L'interrupteur RH/Candidat
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    // Choix de la route en fonction du rôle
+    const url = isRh ? "/auth/rh/login" : "/auth/candidate/login";
+
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/login", {
-        username,
-        password,
-      });
+      const res = await API.post(url, { username, password });
 
-      // --- CORRECTION AJOUTÉE ---
-      // Vérification que le backend renvoie bien les données attendues
-      if (!res.data.userId) {
-        alert("❌ Erreur: L'ID utilisateur (userId) est manquant dans la réponse du serveur. Le backend doit renvoyer { role, username, userId }.");
-        return;
-      }
-      // --- Fin de la correction ---
-
-      localStorage.setItem("role", res.data.role);
+      // Sauvegarde des infos
+      localStorage.setItem("userId", res.data.id);
       localStorage.setItem("username", res.data.username);
-      localStorage.setItem("userId", res.data.userId); // <- Donnée cruciale
+      localStorage.setItem("role", res.data.role);
 
-      onLogin(res.data.role);
+      // Redirection
+      if (res.data.role === "ROLE_RH") {
+        navigate("/rh");
+      } else {
+        navigate("/");
+      }
+
     } catch (err) {
-      alert("❌ " + (err.response?.data || "Erreur de connexion"));
+      console.error(err);
+      // Gestion d'erreur robuste
+      let errorMsg = "Erreur de connexion";
+      if (err.response && err.response.data) {
+        errorMsg = typeof err.response.data === 'string'
+                   ? err.response.data
+                   : (err.response.data.error || JSON.stringify(err.response.data));
+      }
+      setError(errorMsg === "Invalid credentials" ? "Identifiants incorrects" : errorMsg);
     }
   };
 
-
-  const handleRegister = async () => {
-    // Note: Ce handleRegister est simple et ne connecte pas l'utilisateur.
-    // L'utilisateur devra se connecter après s'être inscrit.
-    // C'est correct pour l'instant, mais votre 'SignUp.js' fait un meilleur travail.
-    await axios.post("http://localhost:8080/api/auth/register", {
-      username,
-      email: `${username}@example.com`,
-      password,
-      role,
-    });
-    alert("Compte créé ! Vous pouvez vous connecter.");
-  };
-
   return (
-    <div className="container text-center mt-5">
-      <h2>Connexion / Inscription</h2>
-      <input className="form-control mt-3" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} />
-      <input className="form-control mt-3" type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <select className="form-select mt-3" value={role} onChange={(e) => setRole(e.target.value)}>
-        <option value="ROLE_CANDIDAT">Candidat</option>
-        <option value="ROLE_RH">RH</option>
-      </select>
-      <div className="mt-3">
-        <button className="btn btn-primary me-2" onClick={handleLogin}>Se connecter</button>
-        <button className="btn btn-secondary" onClick={onSignUp}>Créer un compte</button>
+    <div className="container mt-5" style={{ maxWidth: 400 }}>
+      <div className="card shadow p-4">
+        <h3 className="text-center mb-4">Connexion</h3>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          {/* --- INTERRUPTEUR RH / CANDIDAT --- */}
+          <div className="form-check form-switch mb-3">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="rhSwitch"
+              checked={isRh}
+              onChange={(e) => setIsRh(e.target.checked)}
+            />
+            <label className="form-check-label" htmlFor="rhSwitch">
+              Je suis un Recruteur (RH)
+            </label>
+          </div>
+
+          <div className="mb-3">
+            <label>Nom d'utilisateur</label>
+            <input
+              className="form-control"
+              placeholder="Entrez votre identifiant"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+
+          <div className="mb-3">
+            <label>Mot de passe</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="Entrez votre mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          <div className="d-grid">
+            <button type="submit" className="btn btn-primary">
+              Se connecter
+            </button>
+          </div>
+        </form>
+
+        {/* Le lien d'inscription ne s'affiche que si on est Candidat */}
+        {!isRh && (
+          <p className="text-center mt-3">
+            Pas de compte ? <Link to="/sign-up">S'inscrire</Link>
+          </p>
+        )}
       </div>
     </div>
   );
 }
-
-export default Login;

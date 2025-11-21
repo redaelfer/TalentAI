@@ -2,6 +2,7 @@ package com.talentai.backend.offer;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import com.talentai.backend.rh.Rh;
 import lombok.*;
 
 import java.time.Instant;
@@ -35,4 +36,7 @@ public class Offer {
     private String remuneration;  // ex: "4000 MAD/mois"
     private String experience;    // ex: "2 ans minimum"
     private String typeContrat;
+    @ManyToOne
+    @JoinColumn(name = "rh_id")
+    private Rh rh;
 }

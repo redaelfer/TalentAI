@@ -1,26 +1,19 @@
 package com.talentai.backend.candidate;
 
-import com.talentai.backend.user.User; // <-- 1. AJOUTER CET IMPORT
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Candidate {
-    @Id
-    private Long id; // L'ID sera fourni par l'Utilisateur
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId // Indique que cette relation UTILISE la clé primaire (partage l'ID)
-    @JoinColumn(name = "id") // Le nom de la colonne PK/FK sera "id"
-    private User user;
-    // --- FIN DE L'AJOUT ---
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true)
+    private String username; // Login du candidat
+    private String password; // Mot de passe du candidat
 
     private String fullName;
     private String email;
@@ -30,7 +23,6 @@ public class Candidate {
     @Lob
     @Column(length = 1000000)
     private byte[] cvFile;
-
     private String cvFileName;
     private String cvContentType;
 }
