@@ -59,14 +59,18 @@ export default function CandidateDashboard() {
       alert("✅ Candidature envoyée avec succès !");
     } catch (err) {
       console.error(err);
-      if (err.response?.data?.includes("CV not found")) {
-         alert("❌ Vous devez d'abord ajouter un CV à votre profil pour postuler.");
-         handleOpenProfileModal();
-      } else {
-         alert("❌ Erreur lors de la candidature.");
-      }
-    }
-  };
+      const errorMsg = err.response?.data?.message || err.response?.data || "";
+
+            if (typeof errorMsg === "string" && errorMsg.includes("ALREADY_APPLIED")) {
+               alert("⚠️ Vous avez déjà postulé à cette offre.");
+            } else if (typeof errorMsg === "string" && errorMsg.includes("CV not found")) {
+               alert("❌ Vous devez d'abord ajouter un CV à votre profil pour postuler.");
+               handleOpenProfileModal();
+            } else {
+               alert("❌ Erreur lors de la candidature.");
+            }
+          }
+        };
 
   // --- Logique du Modal de Profil ---
   const loadProfile = useCallback(async () => {

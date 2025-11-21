@@ -6,6 +6,7 @@ import com.talentai.backend.rh.Rh;
 import com.talentai.backend.rh.RhRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -25,6 +26,7 @@ public class AuthController {
     // ==========================================
 
     @PostMapping("/candidate/login")
+    @Transactional
     public ResponseEntity<?> loginCandidate(@RequestBody Map<String, String> loginDetails) {
         String username = loginDetails.get("username");
         String password = loginDetails.get("password");

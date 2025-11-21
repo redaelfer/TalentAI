@@ -21,6 +21,7 @@ public class Candidate {
     private String telephone;
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(length = 1000000)
     private byte[] cvFile;
     private String cvFileName;

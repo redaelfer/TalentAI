@@ -55,6 +55,10 @@ public class CandidateService {
     }
 
     public int evaluateCv(Long candidateId, String jobDescription, Long offerId) throws IOException {
+        if (evaluationRepository.existsByCandidateIdAndOfferId(candidateId, offerId)) {
+            // On lance une exception avec un message précis que le frontend pourra détecter
+            throw new RuntimeException("ALREADY_APPLIED");
+        }
         Candidate candidate = one(candidateId);
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new RuntimeException("Offer not found with id: " + offerId));

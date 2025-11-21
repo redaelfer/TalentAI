@@ -6,20 +6,19 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "evaluations")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Evaluation {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Candidate candidate;
+    private int score; // Score donné par l'IA (0-100)
 
     @ManyToOne
-    private Offer offer;
+    @JoinColumn(name = "candidate_id")
+    private Candidate candidate; // Lien direct vers le candidat
 
-    private Integer score;
+    @ManyToOne
+    @JoinColumn(name = "offer_id")
+    private Offer offer; // Lien vers l'offre
 }

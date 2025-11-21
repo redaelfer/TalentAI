@@ -1,39 +1,40 @@
 package com.talentai.backend.evaluation;
 
-import com.talentai.backend.offer.Offer;
-import com.talentai.backend.offer.OfferRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/evaluations")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 public class EvaluationController {
 
-    private final EvaluationRepository repo;
-    private final OfferRepository offerRepo;
+    private final EvaluationRepository repository;
 
-    public EvaluationController(EvaluationRepository repo, OfferRepository offerRepo) {
-        this.repo = repo;
-        this.offerRepo = offerRepo;
-    }
-
+    // Récupérer les évaluations d'une offre spécifique
     @GetMapping("/offer/{offerId}")
-    public List<Map<String, Object>> byOffer(@PathVariable Long offerId) {
-        Offer o = offerRepo.findById(offerId).orElseThrow();
+    public List<EvaluationDTO> getByOffer(@PathVariable Long offerId) {
+        List<Evaluation> evaluations = repository.findByOfferId(offerId);
 
-        return repo.findByOffer(o).stream()
-                .map(e -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("evaluationId", e.getId());
-                    map.put("candidateId", e.getCandidate().getId());
-                    map.put("candidateName", e.getCandidate().getFullName());
-                    map.put("email", e.getCandidate().getEmail());
-                    map.put("score", e.getScore());
-                    return map;
-                })
+        // On transforme les données brutes en un format simple pour le React
+        return evaluations.stream()
+                .map(e -> new EvaluationDTO(
+                        e.getCandidate().getId(),
+                        e.getCandidate().getFullName(), // Nom récupéré directement du Candidat
+                        e.getCandidate().getEmail(),    // Email récupéré directement
+                        e.getScore()
+                ))
                 .collect(Collectors.toList());
     }
+
+    // Petit objet (DTO) pour structurer la réponse JSON proprement
+    public record EvaluationDTO(
+            Long candidateId,
+            String candidateName,
+            String email,
+            int score
+    ) {}
 }
