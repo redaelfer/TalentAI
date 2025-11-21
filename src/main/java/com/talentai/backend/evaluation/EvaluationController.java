@@ -1,6 +1,7 @@
 package com.talentai.backend.evaluation;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional; // <-- IMPORT IMPORTANT
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,23 +15,23 @@ public class EvaluationController {
 
     private final EvaluationRepository repository;
 
-    // Récupérer les évaluations d'une offre spécifique
     @GetMapping("/offer/{offerId}")
+    @Transactional(readOnly = true) // <--- OBLIGATOIRE POUR LIRE LE CANDIDAT (CV) SANS ERREUR
     public List<EvaluationDTO> getByOffer(@PathVariable Long offerId) {
         List<Evaluation> evaluations = repository.findByOfferId(offerId);
 
-        // On transforme les données brutes en un format simple pour le React
+        // On transforme la donnée brute en un format simple pour le React
         return evaluations.stream()
                 .map(e -> new EvaluationDTO(
                         e.getCandidate().getId(),
-                        e.getCandidate().getFullName(), // Nom récupéré directement du Candidat
-                        e.getCandidate().getEmail(),    // Email récupéré directement
+                        e.getCandidate().getFullName(),
+                        e.getCandidate().getEmail(),
                         e.getScore()
                 ))
                 .collect(Collectors.toList());
     }
 
-    // Petit objet (DTO) pour structurer la réponse JSON proprement
+    // Objet simple pour le frontend
     public record EvaluationDTO(
             Long candidateId,
             String candidateName,
