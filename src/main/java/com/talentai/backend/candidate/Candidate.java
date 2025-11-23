@@ -12,8 +12,8 @@ public class Candidate {
     private Long id;
 
     @Column(unique = true)
-    private String username; // Login du candidat
-    private String password; // Mot de passe du candidat
+    private String username;
+    private String password;
 
     private String fullName;
     private String email;

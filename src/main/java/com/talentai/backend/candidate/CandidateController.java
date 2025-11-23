@@ -2,6 +2,7 @@ package com.talentai.backend.candidate;
 
 import jakarta.validation.Valid;
 import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/candidates")
-@CrossOrigin(origins = "*") // Note : "*" est ok pour le dev, mais à changer pour la prod
+@CrossOrigin(origins = "*")
 public class CandidateController {
 
     private final CandidateService service;
@@ -50,6 +51,7 @@ public class CandidateController {
     }
 
     @GetMapping("/{id}/cv")
+    @Transactional(readOnly = true)
     public ResponseEntity<byte[]> downloadCv(@PathVariable Long id) {
         Candidate c = service.one(id);
         byte[] data = c.getCvFile();
@@ -59,7 +61,7 @@ public class CandidateController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(c.getCvContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + c.getCvFileName() + "\"")
+                        "inline; filename=\"" + c.getCvFileName() + "\"")
                 .body(data);
     }
 
@@ -75,11 +77,6 @@ public class CandidateController {
         return ResponseEntity.ok(score);
     }
 
-
-    /**
-     * Gère la mise à jour des informations textuelles du profil candidat.
-     * Appelé par le frontend depuis CandidateProfile.js
-     */
     @PutMapping("/{id}")
     public ResponseEntity<Candidate> updateCandidate(
             @PathVariable Long id,
