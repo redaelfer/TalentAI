@@ -86,6 +86,7 @@ public class CandidateService {
                 .candidate(candidate)
                 .offer(offer)
                 .score(score)
+                .status("NEW")
                 .build();
 
         evaluationRepository.save(evaluation);

@@ -12,13 +12,20 @@ public class Evaluation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int score; // Score donné par l'IA (0-100)
+    private int score;
+
+    // NOUVEAU : Statut du workflow (NEW, INTERVIEW, ACCEPTED, REJECTED)
+    private String status;
+
+    // NOUVEAU : Questions générées par l'IA pour l'entretien
+    @Column(length = 5000)
+    private String interviewQuestions;
 
     @ManyToOne
     @JoinColumn(name = "candidate_id")
-    private Candidate candidate; // Lien direct vers le candidat
+    private Candidate candidate;
 
     @ManyToOne
     @JoinColumn(name = "offer_id")
-    private Offer offer; // Lien vers l'offre
+    private Offer offer;
 }

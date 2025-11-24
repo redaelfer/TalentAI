@@ -3,9 +3,7 @@ package com.talentai.backend.ai;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class AiService {
@@ -14,13 +12,10 @@ public class AiService {
 
     public AiService() {
         this.client = WebClient.builder()
-                .baseUrl("http://localhost:11434") // port par défaut d’Ollama
+                .baseUrl("http://localhost:11434") // Port par défaut d’Ollama
                 .build();
     }
 
-    /**
-     * Appelle Ollama pour évaluer la compatibilité entre un CV et une offre.
-     */
     public String scoreCv(String cvText, String jobDescription) {
         String prompt = """
                 Tu es un recruteur technique expert.
@@ -38,10 +33,34 @@ public class AiService {
                 Exemple de réponse : 85
                 """.formatted(cvText, jobDescription);
 
+        return callOllama(prompt);
+    }
+
+    // --- NOUVEAU : Génération de questions ---
+    public String generateInterviewQuestions(String cvText, String jobDescription) {
+        String prompt = """
+                Tu es un expert technique. Analyse ce CV par rapport à l'offre.
+                Identifie les compétences manquantes ou faibles dans le CV.
+                Génère 5 questions d'entretien techniques précises pour tester ces lacunes.
+                Formate la réponse strictement en liste HTML (<ul><li>Question...</li></ul>).
+                Ne mets pas de texte d'introduction, juste la liste HTML.
+                
+                Offre :
+                %s
+                
+                CV :
+                %s
+                """.formatted(jobDescription, cvText);
+
+        return callOllama(prompt);
+    }
+
+    // Méthode utilitaire pour éviter de dupliquer le code WebClient
+    private String callOllama(String prompt) {
         Map<String, Object> body = Map.of(
-                "model", "llama3", // Assurez-vous d'avoir 'llama3' d'installé sur Ollama
+                "model", "llama3", // Vérifiez que c'est bien votre modèle (ou "llama2")
                 "prompt", prompt,
-                "stream", false // On demande une réponse complète, pas un flux
+                "stream", false
         );
 
         try {
@@ -51,18 +70,15 @@ public class AiService {
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(Map.class)
-                    .block(); // .block() est ok pour un service interne simple
+                    .block();
 
             if (response != null && response.containsKey("response")) {
-                String aiResponse = response.get("response").toString().trim();
-                System.out.println("Réponse brute d'Ollama: " + aiResponse); // Pour le débogage
-                return aiResponse;
+                return response.get("response").toString().trim();
             }
         } catch (Exception e) {
-            System.err.println("Erreur lors de l'appel à Ollama: " + e.getMessage());
-            return "0"; // Retourne 0 en cas d'erreur de communication
+            System.err.println("Erreur Ollama: " + e.getMessage());
+            return "Erreur lors de la génération.";
         }
-
-        return "0";
+        return "";
     }
 }

@@ -22,6 +22,10 @@ export default function CandidateDashboard() {
 
   const [profileMessage, setProfileMessage] = useState(null);
 
+  // --- NOUVEAU : État pour le chargement de la candidature ---
+  const [isApplying, setIsApplying] = useState(null); // Stocke l'ID de l'offre en cours ou null
+  // ----------------------------------------------------------
+
   useEffect(() => {
     loadOffers();
   }, []);
@@ -51,6 +55,10 @@ export default function CandidateDashboard() {
       alert("Erreur: ID Candidat non trouvé.");
       return;
     }
+
+    // Active le chargement pour cette offre spécifique
+    setIsApplying(offer.id);
+
     try {
       await API.post(`/candidates/${candidateId}/evaluate`, {
         jobDescription: offer.description,
@@ -61,16 +69,19 @@ export default function CandidateDashboard() {
       console.error(err);
       const errorMsg = err.response?.data?.message || err.response?.data || "";
 
-            if (typeof errorMsg === "string" && errorMsg.includes("ALREADY_APPLIED")) {
-               alert("⚠️ Vous avez déjà postulé à cette offre.");
-            } else if (typeof errorMsg === "string" && errorMsg.includes("CV not found")) {
-               alert("❌ Vous devez d'abord ajouter un CV à votre profil pour postuler.");
-               handleOpenProfileModal();
-            } else {
-               alert("❌ Erreur lors de la candidature.");
-            }
-          }
-        };
+      if (typeof errorMsg === "string" && errorMsg.includes("ALREADY_APPLIED")) {
+         alert("⚠️ Vous avez déjà postulé à cette offre.");
+      } else if (typeof errorMsg === "string" && errorMsg.includes("CV not found")) {
+         alert("❌ Vous devez d'abord ajouter un CV à votre profil pour postuler.");
+         handleOpenProfileModal();
+      } else {
+         alert("❌ Erreur lors de la candidature.");
+      }
+    } finally {
+      // Désactive le chargement quoi qu'il arrive (succès ou erreur)
+      setIsApplying(null);
+    }
+  };
 
   // --- Logique du Modal de Profil ---
   const loadProfile = useCallback(async () => {
@@ -145,77 +156,91 @@ export default function CandidateDashboard() {
              onChange={e => setQuery(e.target.value)} />
 
       <div className="row">
-        {filtered.map(o => (
-          <div key={o.id} className="col-md-12">
-            <div className="card mb-4 shadow-sm">
-              <div className="card-body">
+        {filtered.map(o => {
+          // On vérifie si c'est l'offre en cours de chargement
+          const isLoadingThisOffer = isApplying === o.id;
 
-                <div className="d-flex justify-content-between">
-                    <h5 className="card-title text-primary">{o.title}</h5>
-                    <small className="text-muted">Publié le {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Récemment'}</small>
-                </div>
+          return (
+            <div key={o.id} className="col-md-12">
+              <div className="card mb-4 shadow-sm">
+                <div className="card-body">
 
-                {/* --- NOUVEAU BLOC : INFOS ENTREPRISE (RH) --- */}
-                {o.rh && (
-                    <div className="alert alert-light border py-2 px-3 small mb-3">
-                        <strong className="text-dark">🏢 {o.rh.nomEntreprise || "Entreprise confidentielle"}</strong>
-                        <div className="mt-1 text-muted">
-                            {o.rh.siteWebEntreprise && (
-                                <span className="me-3">
-                                    🌐 <a href={o.rh.siteWebEntreprise} target="_blank" rel="noreferrer" className="text-decoration-none">{o.rh.siteWebEntreprise}</a>
-                                </span>
-                            )}
-                            {o.rh.adresseEntreprise && (
-                                <span>📍 {o.rh.adresseEntreprise}</span>
-                            )}
-                        </div>
+                  <div className="d-flex justify-content-between">
+                      <h5 className="card-title text-primary">{o.title}</h5>
+                      <small className="text-muted">Publié le {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Récemment'}</small>
+                  </div>
+
+                  {/* --- NOUVEAU BLOC : INFOS ENTREPRISE (RH) --- */}
+                  {o.rh && (
+                      <div className="alert alert-light border py-2 px-3 small mb-3">
+                          <strong className="text-dark">🏢 {o.rh.nomEntreprise || "Entreprise confidentielle"}</strong>
+                          <div className="mt-1 text-muted">
+                              {o.rh.siteWebEntreprise && (
+                                  <span className="me-3">
+                                      🌐 <a href={o.rh.siteWebEntreprise} target="_blank" rel="noreferrer" className="text-decoration-none">{o.rh.siteWebEntreprise}</a>
+                                  </span>
+                              )}
+                              {o.rh.adresseEntreprise && (
+                                  <span>📍 {o.rh.adresseEntreprise}</span>
+                              )}
+                          </div>
+                      </div>
+                  )}
+                  {/* --- FIN DU BLOC --- */}
+
+                  <div className="d-flex flex-wrap gap-2 mb-3">
+                    {o.skills && o.skills.split(',').filter(s => s).map(skill => (
+                      <span key={skill} className="badge bg-secondary fw-normal">{skill}</span>
+                    ))}
+                  </div>
+
+                  <div className="row small text-muted border-top border-bottom py-3 mb-3 mx-0 bg-light rounded">
+                    <div className="col-sm-6 col-lg-3 mb-2">
+                      <strong>Contrat :</strong> {o.typeContrat || 'Non spécifié'}
                     </div>
-                )}
-                {/* --- FIN DU BLOC --- */}
+                    <div className="col-sm-6 col-lg-3 mb-2">
+                      <strong>Durée :</strong> {o.duree || 'Non spécifié'}
+                    </div>
+                    <div className="col-sm-6 col-lg-3 mb-2">
+                      <strong>Rémunération :</strong> {o.remuneration || 'Non spécifié'}
+                    </div>
+                    <div className="col-sm-6 col-lg-3 mb-2">
+                      <strong>Expérience :</strong> {o.experience || 'Non spécifié'}
+                    </div>
+                  </div>
 
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                  {o.skills && o.skills.split(',').filter(s => s).map(skill => (
-                    <span key={skill} className="badge bg-secondary fw-normal">{skill}</span>
-                  ))}
+                  <p
+                    className="card-text mb-4"
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      maxHeight: '250px',
+                      overflowY: 'auto',
+                      padding: '10px',
+                    }}
+                  >
+                    {o.description || 'Aucune description fournie.'}
+                  </p>
+
+                  <button
+                    className="btn btn-success"
+                    onClick={() => handleApply(o)}
+                    disabled={isApplying !== null} // Désactive tous les boutons si une requête est en cours
+                    style={{ minWidth: '150px' }} // Pour éviter que le bouton change de taille
+                  >
+                    {isLoadingThisOffer ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Analyse en cours...
+                      </>
+                    ) : (
+                      "Postuler avec mon profil"
+                    )}
+                  </button>
                 </div>
-
-                <div className="row small text-muted border-top border-bottom py-3 mb-3 mx-0 bg-light rounded">
-                  <div className="col-sm-6 col-lg-3 mb-2">
-                    <strong>Contrat :</strong> {o.typeContrat || 'Non spécifié'}
-                  </div>
-                  <div className="col-sm-6 col-lg-3 mb-2">
-                    <strong>Durée :</strong> {o.duree || 'Non spécifié'}
-                  </div>
-                  <div className="col-sm-6 col-lg-3 mb-2">
-                    <strong>Rémunération :</strong> {o.remuneration || 'Non spécifié'}
-                  </div>
-                  <div className="col-sm-6 col-lg-3 mb-2">
-                    <strong>Expérience :</strong> {o.experience || 'Non spécifié'}
-                  </div>
-                </div>
-
-                <p
-                  className="card-text mb-4"
-                  style={{
-                    whiteSpace: 'pre-wrap',
-                    maxHeight: '250px',
-                    overflowY: 'auto',
-                    padding: '10px',
-                  }}
-                >
-                  {o.description || 'Aucune description fournie.'}
-                </p>
-
-                <button
-                  className="btn btn-success"
-                  onClick={() => handleApply(o)}
-                >
-                  Postuler avec mon profil
-                </button>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {!filtered.length && (
             <div className="text-center py-5">

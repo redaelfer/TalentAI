@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { API } from "../api";
+import { useNavigate } from "react-router-dom";
 
 export default function RhDashboard() {
   const [offers, setOffers] = useState([]);
@@ -7,6 +8,7 @@ export default function RhDashboard() {
 
   // On récupère l'ID du RH depuis le localStorage
   const [rhId] = useState(localStorage.getItem("userId"));
+  const navigate = useNavigate();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -123,8 +125,14 @@ export default function RhDashboard() {
     <div className="container my-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>👔 Espace RH</h2>
-        <button className="btn btn-outline-secondary" onClick={() => { localStorage.clear(); window.location.reload(); }}>Déconnexion</button>
-      </div>
+        <div>
+            <button className="btn btn-primary me-2" onClick={() => navigate("/rh/kanban")}>
+                📊 Voir Workflow Kanban
+            </button>
+            <button className="btn btn-outline-secondary" onClick={() => { localStorage.clear(); window.location.reload(); }}>
+                Déconnexion
+            </button>
+        </div>      </div>
 
       <div className="row">
         {/* Colonne GAUCHE : Liste des offres */}
