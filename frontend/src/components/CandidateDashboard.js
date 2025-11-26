@@ -6,13 +6,10 @@ export default function CandidateDashboard() {
   const [candidateId] = useState(() => localStorage.getItem("userId"));
   const [query, setQuery] = useState("");
 
-  // État pour le profil complet (pour le matching)
   const [candidateProfile, setCandidateProfile] = useState(null);
 
-  // --- NOUVEAU : Liste des IDs des offres déjà postulées ---
   const [appliedOfferIds, setAppliedOfferIds] = useState([]);
 
-  // --- ÉTAT DE CHARGEMENT ---
   const [applyingOfferId, setApplyingOfferId] = useState(null);
 
   // --- États pour le modal de profil ---

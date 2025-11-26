@@ -119,9 +119,6 @@ export default function RhDashboard() {
         <h2>👔 Espace RH</h2>
         <div className="d-flex align-items-center">
             <RhNotifications />
-            <button className="btn btn-primary ms-3 me-2" onClick={() => navigate("/rh/kanban")}>
-                📊 Voir Workflow Kanban
-            </button>
             <button className="btn btn-outline-secondary" onClick={() => { localStorage.clear(); window.location.reload(); }}>
                 Déconnexion
             </button>
@@ -185,6 +182,14 @@ export default function RhDashboard() {
             <div className="card-body">
               {selectedOffer ? (
                 <>
+                <div className="d-flex justify-content-end mb-3">
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => navigate("/rh/kanban", { state: { offerId: selectedOffer.id } })}
+                                    >
+                                        📊 Voir Workflow Kanban
+                                    </button>
+                                  </div>
                   <div className="d-flex justify-content-between align-items-start mb-2">
                     <h4 className="mb-0">{selectedOffer.title}</h4>
                     <div className="btn-group">

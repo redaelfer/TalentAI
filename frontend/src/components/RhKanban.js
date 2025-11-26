@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { API } from "../api";
-import { useNavigate } from "react-router-dom"; // Pour le bouton retour
+import { useNavigate, useLocation } from "react-router-dom"; // Ajout de useLocation
 
 export default function RhKanban() {
   const [offers, setOffers] = useState([]);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [rhId] = useState(() => localStorage.getItem("userId"));
-  const navigate = useNavigate(); // Hook pour naviguer
+
+  const navigate = useNavigate();
+  const location = useLocation(); // Pour récupérer les données passées via navigate
 
   const [evaluations, setEvaluations] = useState([]);
 
@@ -15,6 +17,7 @@ export default function RhKanban() {
   const [selectedCandidateAi, setSelectedCandidateAi] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
 
+  // Chargement des offres
   const loadOffers = useCallback(async () => {
     if (!rhId) return;
     try {
@@ -23,6 +26,7 @@ export default function RhKanban() {
     } catch (err) { console.error(err); }
   }, [rhId]);
 
+  // Chargement des évaluations
   const loadEvaluations = useCallback(async (offerId) => {
     if (!offerId) return;
     try {
@@ -31,7 +35,21 @@ export default function RhKanban() {
     } catch (err) { console.error(err); }
   }, []);
 
-  useEffect(() => { loadOffers(); }, [loadOffers]);
+  // Initialisation
+  useEffect(() => {
+    loadOffers();
+  }, [loadOffers]);
+
+  // --- NOUVEAU : Sélection automatique de l'offre si passée dans la navigation ---
+  useEffect(() => {
+    if (offers.length > 0 && location.state?.offerId) {
+        const preSelected = offers.find(o => o.id === location.state.offerId);
+        if (preSelected) {
+            setSelectedOffer(preSelected);
+        }
+    }
+  }, [offers, location.state]);
+  // -------------------------------------------------------------------------------
 
   useEffect(() => {
     if (selectedOffer) loadEvaluations(selectedOffer.id);
@@ -85,10 +103,15 @@ export default function RhKanban() {
       </div>
 
       <div className="mb-4">
-        <select className="form-select" onChange={(e) => {
-            const offer = offers.find(o => o.id === parseInt(e.target.value));
-            setSelectedOffer(offer || null);
-        }}>
+        <select
+            className="form-select"
+            // On lie la valeur du select à l'état selectedOffer pour que l'affichage soit cohérent
+            value={selectedOffer ? selectedOffer.id : ""}
+            onChange={(e) => {
+                const offer = offers.find(o => o.id === parseInt(e.target.value));
+                setSelectedOffer(offer || null);
+            }}
+        >
             <option value="">-- Choisir une offre pour voir le tableau --</option>
             {offers.map(o => <option key={o.id} value={o.id}>{o.title}</option>)}
         </select>
