@@ -3,6 +3,7 @@ package com.talentai.backend.ai;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.beans.factory.annotation.Value;
 import java.util.Map;
 
 @Service
@@ -10,9 +11,9 @@ public class AiService {
 
     private final WebClient client;
 
-    public AiService() {
+    public AiService(@Value("${ollama.url:http://localhost:11434}") String ollamaUrl) {
         this.client = WebClient.builder()
-                .baseUrl("http://localhost:11434") // Port par défaut d’Ollama
+                .baseUrl(ollamaUrl)
                 .build();
     }
 
