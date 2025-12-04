@@ -10,11 +10,17 @@ import java.util.Map;
 public class AiService {
 
     private final WebClient client;
+    private final String ollamaModel;
 
-    public AiService(@Value("${ollama.url:http://localhost:11434}") String ollamaUrl) {
+    // Injection de l'URL et du Modèle depuis application.yml ou les variables d'environnement
+    public AiService(
+            @Value("${ollama.url:http://localhost:11434}") String ollamaUrl,
+            @Value("${ollama.model:llama3}") String ollamaModel
+    ) {
         this.client = WebClient.builder()
                 .baseUrl(ollamaUrl)
                 .build();
+        this.ollamaModel = ollamaModel;
     }
 
     public String scoreCv(String cvText, String jobDescription) {
@@ -37,7 +43,6 @@ public class AiService {
         return callOllama(prompt);
     }
 
-    // --- NOUVEAU : Génération de questions ---
     public String generateInterviewQuestions(String cvText, String jobDescription) {
         String prompt = """
                 Tu es un expert technique. Analyse ce CV par rapport à l'offre.
@@ -56,10 +61,9 @@ public class AiService {
         return callOllama(prompt);
     }
 
-    // Méthode utilitaire pour éviter de dupliquer le code WebClient
     private String callOllama(String prompt) {
         Map<String, Object> body = Map.of(
-                "model", "llama3", // Vérifiez que c'est bien votre modèle (ou "llama2")
+                "model", this.ollamaModel, // Utilisation de la variable injectée
                 "prompt", prompt,
                 "stream", false
         );
@@ -77,7 +81,7 @@ public class AiService {
                 return response.get("response").toString().trim();
             }
         } catch (Exception e) {
-            System.err.println("Erreur Ollama: " + e.getMessage());
+            System.err.println("Erreur Ollama (" + this.ollamaModel + "): " + e.getMessage());
             return "Erreur lors de la génération.";
         }
         return "";

@@ -5,13 +5,17 @@ spring:
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: update   # pour dev
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
   sql:
     init:
       mode: never
+
+ollama:
+  url: http://localhost:11434
+  model: llama3
 
 server:
   port: 8080

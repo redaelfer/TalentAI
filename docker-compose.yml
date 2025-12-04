@@ -12,6 +12,18 @@ services:
       POSTGRES_DB: talent_ai
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - talentai-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: talentai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - talentai-network
 
   backend:
     build: .
@@ -22,11 +34,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/talent_ai
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: llama3
     depends_on:
       - postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - ollama
+    networks:
+      - talentai-network
 
   frontend:
     build: ./frontend
@@ -40,6 +54,13 @@ services:
       - backend
     volumes:
       - ./frontend/src:/app/src
+    networks:
+      - talentai-network
 
 volumes:
   postgres_data:
+  ollama_data:
+
+networks:
+  talentai-network:
+    driver: bridge
