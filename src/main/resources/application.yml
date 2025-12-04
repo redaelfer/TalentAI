@@ -9,6 +9,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
   sql:
     init:
       mode: never
@@ -20,6 +23,19 @@ spring:
         model: llama3
         options:
           temperature: 0.7
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+
+
+
+
 
 server:
   port: 8080
