@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: redaelfer/talentai-backend:latest
+          image: redaelferr/talentai-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
