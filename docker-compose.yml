@@ -81,7 +81,7 @@ services:
 
   jenkins:
     image: jenkins/jenkins:lts
-    container_name: jenkins-tp
+    container_name: jenkins
     privileged: true
     user: root
     ports:
@@ -89,13 +89,13 @@ services:
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock 
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - talentai-network
 
   sonarqube:
     image: sonarqube:lts
-    container_name: sonarqube-tp
+    container_name: sonarqube
     ports:
       - "9000:9000"
     environment:
