@@ -17,6 +17,11 @@ class IntegrationTest {
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
+    static {
+        if (System.getenv("CI") != null) {
+            postgres.withNetworkMode("talentai-network");
+        }
+    }
     @Test
     void connectionEstablished() {
         assertThat(postgres.isCreated()).isTrue();

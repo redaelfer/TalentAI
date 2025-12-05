@@ -127,4 +127,5 @@ volumes:
 
 networks:
   talentai-network:
+    name: talentai-network
     driver: bridge

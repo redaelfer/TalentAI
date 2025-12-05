@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         TESTCONTAINERS_RYUK_DISABLED = 'true'
+        CI = 'true'
         SONAR_HOST_URL = 'http://sonarqube:9000'
         SONAR_TOKEN = credentials('sonar-token')
     }
