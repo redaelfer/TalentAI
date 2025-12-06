@@ -1,9 +1,9 @@
 package com.talentai.backend.ai;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
@@ -18,8 +18,17 @@ class AiServiceTest {
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ChatClient chatClient;
 
-    @InjectMocks
+    @Mock
+    private ChatClient.Builder chatClientBuilder;
+
     private AiService aiService;
+
+    @BeforeEach
+    void setUp() {
+        when(chatClientBuilder.build()).thenReturn(chatClient);
+
+        aiService = new AiService(chatClientBuilder);
+    }
 
     @Test
     void shouldScoreCvCorrectly() {
