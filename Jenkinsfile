@@ -54,7 +54,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-creds') {
-                        def appImage = docker.build("votre-user/talentai-backend:${env.BUILD_NUMBER}")
+                        def appImage = docker.build("redaelferr/talentai-backend:${env.BUILD_NUMBER}")
                         appImage.push()
                         appImage.push("latest")
                     }
