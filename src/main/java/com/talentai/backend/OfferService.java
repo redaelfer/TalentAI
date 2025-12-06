@@ -1,4 +1,4 @@
-package com.talentai.backend.offer;
+package com.talentai.backend;
 
 import com.talentai.backend.rh.Rh;
 import com.talentai.backend.rh.RhRepository;
@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service

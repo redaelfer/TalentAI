@@ -32,7 +32,7 @@ jobs:
       - name: Rendre le wrapper Maven exécutable
         run: chmod +x mvnw
 
-      - name: Build and Analyze (SonarCloud)
+      - name: Build
         run: ./mvnw clean verify
 
   frontend-test-build:

@@ -1,4 +1,4 @@
-package com.talentai.backend.offer;
+package com.talentai.backend;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
