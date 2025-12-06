@@ -21,10 +21,6 @@ public class AuthController {
     private final CandidateRepository candidateRepository;
     private final RhRepository rhRepository;
 
-    // ==========================================
-    // ZONE CANDIDAT
-    // ==========================================
-
     @PostMapping("/candidate/login")
     @Transactional
     public ResponseEntity<?> loginCandidate(@RequestBody Map<String, String> loginDetails) {
@@ -50,16 +46,11 @@ public class AuthController {
         if (candidateRepository.findByUsername(candidate.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Ce nom d'utilisateur existe déjà.");
         }
-        // On initialise les champs vides pour éviter les null pointers plus tard
         if (candidate.getFullName() == null) candidate.setFullName(candidate.getUsername());
 
         candidateRepository.save(candidate);
         return ResponseEntity.ok(Map.of("message", "Candidat inscrit avec succès"));
     }
-
-    // ==========================================
-    // ZONE RH (RECRUTEUR)
-    // ==========================================
 
     @PostMapping("/rh/login")
     public ResponseEntity<?> loginRh(@RequestBody Map<String, String> loginDetails) {
@@ -81,7 +72,6 @@ public class AuthController {
         ));
     }
 
-    // C'est l'endpoint que vous m'avez demandé pour le RH
     @PostMapping("/rh/register")
     public ResponseEntity<?> registerRh(@RequestBody Rh rh) {
         if (rhRepository.findByUsername(rh.getUsername()).isPresent()) {

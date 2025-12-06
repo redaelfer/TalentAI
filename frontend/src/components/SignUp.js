@@ -23,18 +23,15 @@ export default function SignUp() {
     setError(null);
 
     try {
-      // Appel au nouveau endpoint dédié aux candidats
       await API.post("/auth/candidate/register", formData);
 
       setSuccess(true);
-      // Redirection vers le login après 1.5 secondes
       setTimeout(() => {
         navigate("/login");
       }, 1500);
 
     } catch (err) {
       console.error(err);
-      // Gestion propre de l'erreur (texte ou objet)
       const msg = err.response?.data || "Une erreur est survenue lors de l'inscription.";
       setError(typeof msg === 'string' ? msg : "Erreur technique.");
     }

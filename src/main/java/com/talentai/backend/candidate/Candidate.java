@@ -19,6 +19,10 @@ public class Candidate {
     private String email;
     private String titre;
     private String telephone;
+    @Column(length = 5000)
+    private String skills;
+    private Integer yearsOfExperience;
+    private String lastJob;
 
     @Lob
     @Basic(fetch = FetchType.LAZY)

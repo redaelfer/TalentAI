@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/offers")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor // Génère le constructeur automatiquement
+@RequiredArgsConstructor
 public class OfferController {
 
     private final OfferService service;
@@ -21,7 +21,6 @@ public class OfferController {
         return service.findAll();
     }
 
-    // --- NOUVEAU ENDPOINT POUR LE DASHBOARD RH ---
     @GetMapping("/rh/{rhId}")
     public List<Offer> getOffersByRh(@PathVariable Long rhId) {
         return service.getOffersByRh(rhId);

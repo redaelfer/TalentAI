@@ -21,8 +21,6 @@ public class Offer {
 
     @Column(length = 4000)
     private String description;
-
-    /** Compétences requises, séparées par des virgules (ex: "Java,Spring,React") */
     private String skills;
 
     private Instant createdAt;
@@ -32,9 +30,9 @@ public class Offer {
         this.createdAt = Instant.now();
     }
 
-    private String duree;         // ex: "6 mois"
-    private String remuneration;  // ex: "4000 MAD/mois"
-    private String experience;    // ex: "2 ans minimum"
+    private String duree;
+    private String remuneration;
+    private String experience;
     private String typeContrat;
     @ManyToOne
     @JoinColumn(name = "rh_id")

@@ -32,14 +32,10 @@ public class AiService {
                 """.formatted(cvText, jobDescription);
 
         try {
-            return chatClient.prompt()
-                    .system(systemPrompt)
-                    .user(userPrompt)
-                    .call()
-                    .content();
+            return chatClient.prompt().system(systemPrompt).user(userPrompt).call().content();
         } catch (Exception e) {
             System.err.println("Erreur IA (Score) : " + e.getMessage());
-            return "0"; // Valeur par défaut
+            return "0";
         }
     }
 
@@ -61,14 +57,58 @@ public class AiService {
                 """.formatted(jobDescription, cvText);
 
         try {
-            return chatClient.prompt()
-                    .system(systemPrompt)
-                    .user(userPrompt)
-                    .call()
-                    .content();
+            return chatClient.prompt().system(systemPrompt).user(userPrompt).call().content();
         } catch (Exception e) {
             System.err.println("Erreur IA (Questions) : " + e.getMessage());
             return "<ul><li>Erreur lors de la génération des questions.</li></ul>";
+        }
+    }
+
+    public String extractDataFromCv(String cvText) {
+        String systemPrompt = """
+                Tu es un expert en extraction de données de CV.
+                Extrais les informations suivantes du CV fourni :
+                1. Liste des compétences techniques principales (skills).
+                2. Nombre d'années d'expérience totale (yearsOfExperience) (estime si nécessaire, retourne un nombre entier).
+                3. Le dernier intitulé de poste occupé (lastJob).
+                
+                Réponds UNIQUEMENT avec un JSON valide strict sans markdown.
+                Format attendu :
+                {
+                  "skills": ["Java", "React", ...],
+                  "yearsOfExperience": 3,
+                  "lastJob": "Développeur Fullstack"
+                }
+                """;
+
+        try {
+            return chatClient.prompt().system(systemPrompt).user(cvText).call().content();
+        } catch (Exception e) {
+            System.err.println("Erreur IA (Extraction) : " + e.getMessage());
+            return "{}";
+        }
+    }
+
+    public String generateSummary(String cvText, String jobDescription) {
+        String systemPrompt = """
+                Tu es un assistant RH. Rédige un court paragraphe de synthèse (max 3 phrases) en français.
+                Analyse les points forts du candidat par rapport à l'offre et mentionne les lacunes critiques s'il y en a.
+                Ton ton doit être professionnel et direct.
+                """;
+
+        String userPrompt = """
+                Offre :
+                %s
+                
+                CV :
+                %s
+                """.formatted(jobDescription, cvText);
+
+        try {
+            return chatClient.prompt().system(systemPrompt).user(userPrompt).call().content();
+        } catch (Exception e) {
+            System.err.println("Erreur IA (Résumé) : " + e.getMessage());
+            return "Résumé non disponible.";
         }
     }
 }

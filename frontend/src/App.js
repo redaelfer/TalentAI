@@ -25,14 +25,12 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/sign-up" element={<SignUp />} />
 
-          {/* Dashboard RH Classique */}
           <Route path="/rh" element={
             <PrivateRoute>
               <RhDashboard />
             </PrivateRoute>
           } />
 
-          {/* --- NOUVELLE ROUTE KANBAN --- */}
           <Route path="/rh/kanban" element={
             <PrivateRoute>
               <RhKanban />

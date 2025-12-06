@@ -9,14 +9,10 @@ export default function CandidateDashboard() {
   const [candidateProfile, setCandidateProfile] = useState(null);
   const [appliedOfferIds, setAppliedOfferIds] = useState([]);
   const [applyingOfferId, setApplyingOfferId] = useState(null);
-
-  // --- ÉTATS POUR LA VUE CANDIDATURES & IA ---
-  const [view, setView] = useState("OFFERS"); // 'OFFERS' ou 'APPLICATIONS'
+  const [view, setView] = useState("OFFERS");
   const [myApplications, setMyApplications] = useState([]);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [trainingData, setTrainingData] = useState(null);
-
-  // --- États pour le modal de profil ---
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [titre, setTitre] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -24,15 +20,10 @@ export default function CandidateDashboard() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [profileMessage, setProfileMessage] = useState(null);
-
-  // --- Chargement des données ---
   const loadData = useCallback(async () => {
     try {
-      // 1. Récupérer les offres
       const offersRes = await API.get("/offers");
       setOffers(offersRes.data);
-
-      // 2. Si connecté, récupérer profil et candidatures
       if (candidateId) {
         const profileRes = await API.get(`/candidates/${candidateId}`);
         setCandidateProfile(profileRes.data);
@@ -44,13 +35,11 @@ export default function CandidateDashboard() {
             setTelephone(profileRes.data.telephone || "");
         }
 
-        // --- Récupérer les IDs pour désactiver les boutons "Postuler" ---
         try {
             const appliedRes = await API.get(`/evaluations/candidate/${candidateId}/offer-ids`);
             setAppliedOfferIds(appliedRes.data);
         } catch (err) { console.error(err); }
 
-        // --- Récupérer les détails complets des candidatures (pour l'onglet Mes Candidatures) ---
         try {
             const myAppsRes = await API.get(`/evaluations/candidate/${candidateId}/applications`);
             setMyApplications(myAppsRes.data);
@@ -63,7 +52,6 @@ export default function CandidateDashboard() {
     loadData();
   }, [loadData]);
 
-  // --- Logique de Filtrage et Matching ---
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
 
@@ -86,7 +74,6 @@ export default function CandidateDashboard() {
   }, [offers, query, candidateProfile]);
 
 
-  // --- ACTION : POSTULER ---
   const handleApply = async (offer) => {
     if (!candidateId) {
       alert("Erreur: ID Candidat non trouvé. Veuillez vous reconnecter.");
@@ -109,7 +96,6 @@ export default function CandidateDashboard() {
       alert(`✅ Candidature envoyée avec succès pour "${offer.title}" !`);
 
       setAppliedOfferIds(prev => [...prev, offer.id]);
-      // On recharge les données pour mettre à jour la liste "Mes candidatures"
       loadData();
 
     } catch (err) {
@@ -133,24 +119,19 @@ export default function CandidateDashboard() {
     }
   };
 
-  // --- ACTION : ENTRAÎNEMENT IA ---
   const handleStartTraining = async (application) => {
-    // Affiche la modale immédiatement avec un état de chargement si les questions n'existent pas encore
     setTrainingData({
         questions: application.interviewQuestions,
         loading: !application.interviewQuestions
     });
     setShowTrainingModal(true);
 
-    // Si pas de questions déjà générées, on appelle l'API
     if (!application.interviewQuestions) {
         try {
             const res = await API.post(`/evaluations/${application.evaluationId}/questions`);
-            const newQuestions = res.data; // Le backend retourne le HTML directement (String)
+            const newQuestions = res.data;
 
             setTrainingData({ questions: newQuestions, loading: false });
-
-            // Mise à jour locale pour ne pas rappeler l'IA la prochaine fois
             setMyApplications(prev => prev.map(app =>
                 app.evaluationId === application.evaluationId
                 ? { ...app, interviewQuestions: newQuestions }
@@ -163,9 +144,8 @@ export default function CandidateDashboard() {
     }
   };
 
-  // --- Gestion Modal Profil ---
   const handleOpenProfileModal = () => {
-    loadData(); // Recharge pour être sûr d'avoir les infos à jour
+    loadData();
     setProfileMessage(null);
     setIsProfileModalOpen(true);
   };
@@ -177,7 +157,7 @@ export default function CandidateDashboard() {
     try {
       await API.put(`/candidates/${candidateId}`, { fullName, email, titre, telephone });
       setProfileMessage({ type: "success", text: "Profil mis à jour !" });
-      loadData(); // Met à jour l'interface principale
+      loadData();
     } catch (err) {
       console.error("Erreur MAJ Profil:", err);
       setProfileMessage({ type: "danger", text: "Erreur lors de la mise à jour." });
@@ -216,7 +196,6 @@ export default function CandidateDashboard() {
         </div>
       </div>
 
-      {/* --- NAVIGATION ONGLETS --- */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
             <button
@@ -236,7 +215,6 @@ export default function CandidateDashboard() {
         </li>
       </ul>
 
-      {/* --- VUE 1 : LISTE DES OFFRES --- */}
       {view === 'OFFERS' && (
         <>
             <input className="form-control mb-3"
@@ -337,7 +315,6 @@ export default function CandidateDashboard() {
         </>
       )}
 
-      {/* --- VUE 2 : MES CANDIDATURES --- */}
       {view === "APPLICATIONS" && (
         <div className="row">
             {myApplications.length === 0 && (
@@ -375,7 +352,6 @@ export default function CandidateDashboard() {
         </div>
       )}
 
-      {/* --- MODAL IA (Questions Entretien) --- */}
       {showTrainingModal && trainingData && (
         <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog modal-lg modal-dialog-scrollable">
@@ -409,7 +385,6 @@ export default function CandidateDashboard() {
         </div>
       )}
 
-      {/* --- MODAL PROFIL --- */}
       {isProfileModalOpen && (
         <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
           <div className="modal-dialog modal-dialog-centered">

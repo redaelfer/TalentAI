@@ -1,5 +1,7 @@
 package com.talentai.backend.candidate;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.talentai.backend.ai.AiService;
 import com.talentai.backend.evaluation.Evaluation;
 import com.talentai.backend.evaluation.EvaluationRepository;
@@ -25,6 +27,7 @@ public class CandidateService {
     private final OfferRepository offerRepository;
     private final EvaluationRepository evaluationRepository;
     private final AiService aiService;
+    private final ObjectMapper objectMapper;
 
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -55,6 +58,33 @@ public class CandidateService {
         return candidateRepository.save(candidate);
     }
 
+    public Candidate parseCv(Long id) throws IOException {
+        Candidate candidate = one(id);
+        if (candidate.getCvFile() == null) throw new RuntimeException("Aucun CV à analyser");
+
+        String cvText = extractTextFromPdf(candidate.getCvFile());
+        String jsonResponse = aiService.extractDataFromCv(cvText);
+
+        jsonResponse = jsonResponse.replace("```json", "").replace("```", "").trim();
+
+        try {
+            JsonNode root = objectMapper.readTree(jsonResponse);
+            if (root.has("skills")) {
+                candidate.setSkills(root.get("skills").toString());
+            }
+            if (root.has("yearsOfExperience")) {
+                candidate.setYearsOfExperience(root.get("yearsOfExperience").asInt());
+            }
+            if (root.has("lastJob")) {
+                candidate.setLastJob(root.get("lastJob").asText());
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur parsing JSON IA: " + e.getMessage());
+        }
+
+        return candidateRepository.save(candidate);
+    }
+
     public int evaluateCv(Long candidateId, String jobDescription, Long offerId) throws IOException {
         if (evaluationRepository.existsByCandidateIdAndOfferId(candidateId, offerId)) {
             throw new RuntimeException("ALREADY_APPLIED");
@@ -82,6 +112,10 @@ public class CandidateService {
             System.err.println("Ollama a retourné une réponse non numérique: " + scoreResponse);
         }
 
+        if (candidate.getSkills() == null) {
+            try { parseCv(candidateId); } catch (Exception e) { e.printStackTrace(); }
+        }
+
         Evaluation evaluation = Evaluation.builder()
                 .candidate(candidate)
                 .offer(offer)
@@ -95,7 +129,6 @@ public class CandidateService {
             String destination = "/topic/rh/" + offer.getRh().getId() + "/notifications";
             String notificationMessage = "Nouvelle candidature de " + candidate.getFullName() + " pour " + offer.getTitle();
 
-            // Envoi d'un objet JSON simple
             messagingTemplate.convertAndSend(destination, Map.of(
                     "message", notificationMessage,
                     "score", score,

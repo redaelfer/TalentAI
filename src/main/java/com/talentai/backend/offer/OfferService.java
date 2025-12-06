@@ -20,7 +20,6 @@ public class OfferService {
         return repo.findAll();
     }
 
-    // --- NOUVEAU : Récupérer les offres d'un RH ---
     public List<Offer> getOffersByRh(Long rhId) {
         return repo.findByRhId(rhId);
     }
@@ -30,14 +29,12 @@ public class OfferService {
     }
 
     public Offer create(OfferRequest req) {
-        // 1. On vérifie et récupère le RH
         Rh rh = null;
         if (req.rhId() != null) {
             rh = rhRepository.findById(req.rhId())
                     .orElseThrow(() -> new RuntimeException("RH non trouvé avec id: " + req.rhId()));
         }
 
-        // 2. On construit l'offre avec TOUS les champs
         Offer o = Offer.builder()
                 .title(req.title())
                 .description(req.description())
@@ -47,7 +44,7 @@ public class OfferService {
                 .experience(req.experience())
                 .typeContrat(req.typeContrat())
                 .createdAt(Instant.now())
-                .rh(rh) // Liaison avec le RH
+                .rh(rh)
                 .build();
 
         return repo.save(o);
@@ -56,7 +53,6 @@ public class OfferService {
     public Offer update(Long id, OfferRequest req) {
         Offer o = findById(id);
 
-        // Mise à jour de tous les champs
         o.setTitle(req.title());
         o.setDescription(req.description());
         o.setSkills(req.skills());
@@ -64,8 +60,6 @@ public class OfferService {
         o.setRemuneration(req.remuneration());
         o.setExperience(req.experience());
         o.setTypeContrat(req.typeContrat());
-
-        // Note: On ne change généralement pas le RH lors d'une mise à jour simple
 
         return repo.save(o);
     }

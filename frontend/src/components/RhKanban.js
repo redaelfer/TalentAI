@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { API } from "../api";
-import { useNavigate, useLocation } from "react-router-dom"; // Ajout de useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function RhKanban() {
   const [offers, setOffers] = useState([]);
@@ -8,16 +8,12 @@ export default function RhKanban() {
   const [rhId] = useState(() => localStorage.getItem("userId"));
 
   const navigate = useNavigate();
-  const location = useLocation(); // Pour récupérer les données passées via navigate
+  const location = useLocation();
 
   const [evaluations, setEvaluations] = useState([]);
-
-  // États pour l'assistant IA
   const [showAiModal, setShowAiModal] = useState(false);
   const [selectedCandidateAi, setSelectedCandidateAi] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
-
-  // Chargement des offres
   const loadOffers = useCallback(async () => {
     if (!rhId) return;
     try {
@@ -26,7 +22,6 @@ export default function RhKanban() {
     } catch (err) { console.error(err); }
   }, [rhId]);
 
-  // Chargement des évaluations
   const loadEvaluations = useCallback(async (offerId) => {
     if (!offerId) return;
     try {
@@ -35,12 +30,10 @@ export default function RhKanban() {
     } catch (err) { console.error(err); }
   }, []);
 
-  // Initialisation
   useEffect(() => {
     loadOffers();
   }, [loadOffers]);
 
-  // --- NOUVEAU : Sélection automatique de l'offre si passée dans la navigation ---
   useEffect(() => {
     if (offers.length > 0 && location.state?.offerId) {
         const preSelected = offers.find(o => o.id === location.state.offerId);
@@ -49,14 +42,12 @@ export default function RhKanban() {
         }
     }
   }, [offers, location.state]);
-  // -------------------------------------------------------------------------------
 
   useEffect(() => {
     if (selectedOffer) loadEvaluations(selectedOffer.id);
     else setEvaluations([]);
   }, [selectedOffer, loadEvaluations]);
 
-  // Changer le statut (Kanban)
   const changeStatus = async (evalId, newStatus) => {
     try {
       await API.put(`/evaluations/${evalId}/status`, newStatus, {
@@ -66,7 +57,16 @@ export default function RhKanban() {
     } catch (err) { console.error(err); }
   };
 
-  // Générer questions IA
+  const handleGenerateSummary = async (e, evalData) => {
+    e.stopPropagation();
+    if (evalData.summary) return;
+
+    try {
+        const res = await API.post(`/evaluations/${evalData.id}/summary`);
+        setEvaluations(prev => prev.map(ev => ev.id === evalData.id ? { ...ev, summary: res.data } : ev));
+    } catch (err) { console.error(err); }
+  };
+
   const handleGenerateQuestions = async (evalData) => {
     setSelectedCandidateAi(evalData);
     setShowAiModal(true);
@@ -105,7 +105,6 @@ export default function RhKanban() {
       <div className="mb-4">
         <select
             className="form-select"
-            // On lie la valeur du select à l'état selectedOffer pour que l'affichage soit cohérent
             value={selectedOffer ? selectedOffer.id : ""}
             onChange={(e) => {
                 const offer = offers.find(o => o.id === parseInt(e.target.value));
@@ -129,13 +128,33 @@ export default function RhKanban() {
                             {evaluations.filter(e => e.status === col.id).map(ev => (
                                 <div key={ev.id} className="card mb-2 border-0 shadow-sm">
                                     <div className="card-body p-2">
-                                        <h6 className="card-title mb-1">{ev.candidateName}</h6>
-                                        <div className="small text-muted mb-2">{ev.titre}</div>
-                                        <span className={`badge mb-2 ${ev.score > 70 ? 'bg-success' : 'bg-warning text-dark'}`}>Score: {ev.score}</span>
+                                        <div className="d-flex justify-content-between align-items-start">
+                                            <h6 className="card-title mb-1">{ev.candidateName}</h6>
+                                            <span className={`badge ${ev.score > 70 ? 'bg-success' : 'bg-warning text-dark'}`}>{ev.score}</span>
+                                        </div>
+                                        <div className="small text-muted mb-1">{ev.titre}</div>
+
+                                        {ev.skills && (
+                                            <div className="mb-2" style={{fontSize: '0.75rem', color: '#555'}}>
+                                                <strong>Exp:</strong> {ev.yearsOfExperience} ans <br/>
+                                                <strong>Skills:</strong> {JSON.parse(ev.skills || "[]").slice(0, 3).join(", ")}...
+                                            </div>
+                                        )}
+
+                                        {ev.summary ? (
+                                            <div className="alert alert-secondary p-1 mb-2 small" style={{fontSize: '0.75em', lineHeight: '1.2'}}>
+                                                🤖 {ev.summary}
+                                            </div>
+                                        ) : (
+                                            <button className="btn btn-sm btn-link text-decoration-none p-0 mb-2 small" onClick={(e) => handleGenerateSummary(e, ev)}>
+                                                ✨ Générer résumé IA
+                                            </button>
+                                        )}
+
                                         <a href={`http://localhost:8080/api/candidates/${ev.candidateId}/cv`} target="_blank" rel="noreferrer" className="d-block small mb-2">📄 Voir CV</a>
 
                                         <div className="d-grid gap-1">
-                                            <button className="btn btn-sm btn-outline-dark" onClick={() => handleGenerateQuestions(ev)}>🤖 Assistant IA</button>
+                                            <button className="btn btn-sm btn-outline-dark" onClick={() => handleGenerateQuestions(ev)}>🤖 Questions Entretien</button>
                                             <div className="btn-group btn-group-sm">
                                                 {col.id !== 'INTERVIEW' && <button className="btn btn-outline-info" onClick={() => changeStatus(ev.id, 'INTERVIEW')}>📅</button>}
                                                 {col.id !== 'ACCEPTED' && <button className="btn btn-outline-success" onClick={() => changeStatus(ev.id, 'ACCEPTED')}>✅</button>}

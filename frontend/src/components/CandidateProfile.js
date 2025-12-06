@@ -6,32 +6,25 @@ export default function CandidateProfile() {
   const [candidateId] = useState(localStorage.getItem("userId"));
   const navigate = useNavigate();
 
-  // État pour gérer si on est en "Mode Édition" ou "Mode Affichage"
   const [isEditing, setIsEditing] = useState(false);
 
-  // États pour les données du formulaire
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
   const [titre, setTitre] = useState("");
 
-  const [cv, setCv] = useState(null); // Pour le champ <input type="file">
+  const [cv, setCv] = useState(null);
   const [message, setMessage] = useState(null);
 
-  // --- CORRECTION AVEC useCallback ---
-  // On enveloppe loadProfile dans useCallback pour qu'elle ne soit pas recréée
-  // à chaque rendu, sauf si 'candidateId' change.
   const loadProfile = useCallback(async () => {
     if (!candidateId) {
       setMessage({ type: "danger", text: "Erreur: ID Candidat non trouvé. Veuillez vous reconnecter." });
       return;
     }
     try {
-      // Appelle GET /api/candidates/{id}
       const res = await API.get(`/candidates/${candidateId}`);
       const { data } = res;
 
-      // Remplir les états (et donc le formulaire)
       setFullName(data.fullName || "");
       setEmail(data.email || "");
       setTelephone(data.telephone || "");
@@ -41,29 +34,22 @@ export default function CandidateProfile() {
       console.error("Erreur chargement profil:", err);
       setMessage({ type: "danger", text: "Impossible de charger le profil." });
     }
-  }, [candidateId]); // La fonction dépend de candidateId
-  // --- FIN DE LA CORRECTION ---
-
-  // Au chargement de la page, charger le profil
+  }, [candidateId]);
   useEffect(() => {
     loadProfile();
-  }, [loadProfile]); // 3. Maintenant on peut lister loadProfile comme dépendance
+  }, [loadProfile]);
 
 
-  // Quand l'utilisateur clique sur "Annuler"
   const handleCancelEdit = () => {
     setIsEditing(false);
-    loadProfile(); // Re-charge les données d'origine
+    loadProfile();
   };
 
-  // Quand l'utilisateur clique sur "Enregistrer"
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setMessage(null);
 
-    // Étape A: Mettre à jour les infos textuelles
     try {
-      // Appelle PUT /api/candidates/{id}
       await API.put(`/candidates/${candidateId}`, {
         fullName,
         email,
@@ -78,7 +64,6 @@ export default function CandidateProfile() {
       return;
     }
 
-    // Étape B: Si un nouveau CV est joint, l'uploader
     if (cv) {
       try {
         const data = new FormData();
@@ -95,7 +80,6 @@ export default function CandidateProfile() {
       }
     }
 
-    // Après la sauvegarde, repasser en mode affichage
     setIsEditing(false);
   };
 
@@ -107,7 +91,6 @@ export default function CandidateProfile() {
 
       <div className="d-flex justify-content-between align-items-center">
         <h3>🧍 Profil candidat</h3>
-        {/* BOUTON CRAYON: Affiche seulement si on N'EST PAS en édition */}
         {!isEditing && (
           <button
             className="btn btn-outline-primary"
@@ -134,7 +117,7 @@ export default function CandidateProfile() {
             className="form-control"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            disabled={!isEditing} // Grisé si on n'est pas en édition
+            disabled={!isEditing}
           />
         </div>
         <div className="mb-3">
@@ -168,7 +151,6 @@ export default function CandidateProfile() {
           />
         </div>
 
-        {/* Affiche le champ CV seulement en mode édition */}
         {isEditing && (
           <>
             <hr />
@@ -185,7 +167,6 @@ export default function CandidateProfile() {
           </>
         )}
 
-        {/* Affiche les boutons "Enregistrer" et "Annuler" seulement en mode édition */}
         {isEditing && (
           <div className="d-flex gap-2">
             <button type="submit" className="btn btn-primary">Enregistrer</button>

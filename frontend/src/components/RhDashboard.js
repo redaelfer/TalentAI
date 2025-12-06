@@ -126,7 +126,6 @@ export default function RhDashboard() {
       </div>
 
       <div className="row">
-        {/* Colonne GAUCHE : Liste des offres */}
         <div className="col-md-5">
           {!showCreateForm && (
             <div className="d-grid mb-3">
@@ -176,7 +175,6 @@ export default function RhDashboard() {
           )}
         </div>
 
-        {/* Colonne DROITE : Détails & Candidats */}
         <div className="col-md-7">
           <div className="card">
             <div className="card-body">
@@ -251,7 +249,6 @@ export default function RhDashboard() {
         </div>
       </div>
 
-      {/* Modal d'édition */}
       {isEditModalOpen && (
         <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog">

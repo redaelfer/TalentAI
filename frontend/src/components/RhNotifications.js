@@ -10,12 +10,9 @@ export default function RhNotifications() {
   useEffect(() => {
     if (!rhId) return;
 
-    // Configuration du client STOMP moderne
     const client = new Client({
-      // Utilisation de SockJS comme transport (car le backend a .withSockJS())
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
 
-      // Fonction appelée lors de la connexion réussie
       onConnect: () => {
         console.log("Connecté aux notifications !");
         client.subscribe(`/topic/rh/${rhId}/notifications`, (message) => {
@@ -25,15 +22,11 @@ export default function RhNotifications() {
           }
         });
       },
-      // Options de reconnexion automatique
       reconnectDelay: 5000,
-      // debug: (str) => console.log(str), // Décommentez pour voir les logs
     });
 
-    // Activer la connexion
     client.activate();
 
-    // Nettoyage lors du démontage du composant
     return () => {
       client.deactivate();
     };
@@ -41,7 +34,6 @@ export default function RhNotifications() {
 
   return (
     <div className="position-relative d-inline-block ms-2">
-      {/* --- BOUTON CLOCHE --- */}
       <button
         className="btn btn-light position-relative border"
         onClick={() => setIsOpen(!isOpen)}
@@ -54,7 +46,6 @@ export default function RhNotifications() {
         )}
       </button>
 
-      {/* --- LISTE DÉROULANTE --- */}
       {isOpen && (
         <div
             className="card position-absolute end-0 mt-2 shadow"

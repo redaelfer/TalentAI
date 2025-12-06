@@ -50,6 +50,15 @@ public class CandidateController {
         return ResponseEntity.ok(updated);
     }
 
+    @PostMapping("/{id}/parse-cv")
+    public ResponseEntity<Candidate> parseCv(@PathVariable Long id) {
+        try {
+            Candidate c = service.parseCv(id);
+            return ResponseEntity.ok(c);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     @GetMapping("/{id}/cv")
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> downloadCv(@PathVariable Long id) {
@@ -85,5 +94,4 @@ public class CandidateController {
         Candidate updatedCandidate = service.updateCandidate(id, req);
         return ResponseEntity.ok(updatedCandidate);
     }
-
 }

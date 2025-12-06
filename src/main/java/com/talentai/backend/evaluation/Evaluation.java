@@ -14,12 +14,13 @@ public class Evaluation {
 
     private int score;
 
-    // NOUVEAU : Statut du workflow (NEW, INTERVIEW, ACCEPTED, REJECTED)
     private String status;
 
-    // NOUVEAU : Questions générées par l'IA pour l'entretien
     @Column(length = 5000)
     private String interviewQuestions;
+
+    @Column(length = 5000)
+    private String summary;
 
     @ManyToOne
     @JoinColumn(name = "candidate_id")
