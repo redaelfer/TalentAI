@@ -67,10 +67,9 @@ pipeline {
                         script {
                             echo 'Lancement du test de charge K6...'
                             sh """
-                                docker run --rm \
-                                --network talentai-network \
-                                -v \${PWD}/tests/k6:/scripts \
-                                grafana/k6 run /scripts/load-test.js
+                                cat tests/k6/load-test.js | docker run --rm -i \
+                                                        --network talentai-network \
+                                                        grafana/k6 run -
                             """
                         }
                     }
