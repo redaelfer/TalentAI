@@ -1,63 +1,63 @@
-# TalentAI - Plateforme de Recrutement Augmentée par l'IA 
+# TalentAI - AI-Augmented Recruitment Platform 🚀
 
-**TalentAI** est une solution logicielle innovante conçue pour transformer les processus de recrutement. En combinant la puissance de **Spring Boot**, **React** et de l'intelligence artificielle, la plateforme permet de matcher intelligemment les candidats avec les offres d'emploi, de gérer les évaluations et de suivre le workflow de recrutement.
+**TalentAI** is an innovative software solution designed to transform recruitment processes. By combining the power of **Spring Boot**, **React**, and Artificial Intelligence, the platform enables intelligent matching between candidates and job offers, assessment management, and recruitment workflow tracking.
 
-## 🌟 Fonctionnalités Clés
+## 🌟 Key Features
 
-* **Matching Intelligent (IA)** : Utilisation d'un service d'IA pour évaluer la correspondance entre les profils des candidats et les exigences des offres.
-* **Tableaux de Bord Dédiés** :
-* **Dashboard RH** : Vue d'ensemble des candidatures, gestion des offres et système Kanban pour le suivi des processus.
-* **Dashboard Candidat** : Gestion du profil, suivi des candidatures et accès aux offres.
+* **Intelligent Matching (AI)**: Utilization of an AI service to evaluate the fit between candidate profiles and job requirements.
+* **Dedicated Dashboards**:
+* **HR Dashboard**: Overview of applications, job offer management, and a Kanban system for process tracking.
+* **Candidate Dashboard**: Profile management, application tracking, and access to job postings.
 
 
-* **Notifications en Temps Réel** : Système d'alertes intégré pour les recruteurs et les candidats.
-* **Sécurité Avancée** : Authentification et autorisation sécurisées pour les différents rôles d'utilisateurs.
+* **Real-Time Notifications**: Integrated alert system for both recruiters and candidates.
+* **Advanced Security**: Secure authentication and authorization for different user roles.
 
-## 🛠️ Architecture Technique
+## 🛠️ Technical Architecture
 
-Le projet repose sur une architecture moderne et scalable :
+The project is built on a modern and scalable architecture:
 
-* **Backend** : Java 17+, Spring Boot 3, Spring Data JPA.
-* **Frontend** : React.js avec une interface utilisateur réactive.
-* **Base de Données** : PostgreSQL (configuré via Docker et Spring).
-* **DevOps & CI/CD** : Jenkins, Docker, Kubernetes (K8s).
-* **Monitoring** : Prometheus et Grafana intégrés pour le suivi des performances.
+* **Backend**: Java 17+, Spring Boot 3, Spring Data JPA.
+* **Frontend**: React.js with a responsive user interface.
+* **Database**: PostgreSQL (configured via Docker and Spring).
+* **DevOps & CI/CD**: Jenkins, Docker, Kubernetes (K8s).
+* **Monitoring**: Integrated Prometheus and Grafana for performance tracking.
 
-## Guide de Démarrage Rapide
+## Quick Start Guide
 
-### 1. Prérequis
+### 1. Prerequisites
 
 * Docker & Docker Compose
-* Java 17 et Maven
+* Java 17 and Maven
 * Node.js & npm
 
-### 2. Lancement avec Docker (Complet)
+### 2. Launching with Docker (Full)
 
-La méthode la plus simple pour lancer tout l'écosystème (App, DB, Monitoring) :
+The simplest method to launch the entire ecosystem (App, DB, Monitoring):
 
 ```bash
-# Lancement des services principaux (App + DB)
+# Launch main services (App + DB)
 docker-compose up -d
 
-# Lancement des services d'exploitation (Jenkins, Prometheus, Grafana)
+# Launch operations services (Jenkins, Prometheus, Grafana)
 docker-compose -f ops-compose.yml up -d
 
 ```
 
-### 3. Installation Manuelle
+### 3. Manual Installation
 
-**Backend (Spring Boot) :**
+**Backend (Spring Boot):**
 
 ```bash
-# Dans le dossier racine
+# In the root folder
 ./mvnw clean install
 ./mvnw spring-boot:run
 
 ```
 
-*Le backend sera accessible sur `http://localhost:8080`.*
+*The backend will be accessible at `http://localhost:8080`.*
 
-**Frontend (React) :**
+**Frontend (React):**
 
 ```bash
 cd frontend
@@ -66,19 +66,21 @@ npm start
 
 ```
 
-*Le frontend sera accessible sur `http://localhost:3000`.*
+*The frontend will be accessible at `http://localhost:3000`.*
 
-## ☸️ Déploiement Kubernetes
+## ☸️ Kubernetes Deployment
 
-Le projet est prêt pour le cloud avec des configurations Kubernetes complètes :
+The project is cloud-ready with complete Kubernetes configurations:
 
-* **Déploiement de l'application** : `kubectl apply -f k8s/app-deployment.yaml`.
-* **Monitoring** : Les fichiers dans `k8s/monitoring/` permettent de déployer Prometheus et Grafana sur votre cluster.
-* **CI/CD GitOps** : Intégration prévue avec **ArgoCD** via `k8s/argocd-app.yaml`.
+* **App Deployment**: `kubectl apply -f k8s/app-deployment.yaml`.
+* **Monitoring**: Files in `k8s/monitoring/` allow for deploying Prometheus and Grafana on your cluster.
+* **GitOps CI/CD**: Planned integration with **ArgoCD** via `k8s/argocd-app.yaml`.
 
-## 📂 Structure du Repository
+## 📂 Repository Structure
 
-* `/src` : Code source Java du backend.
-* `/frontend` : Application React.
-* `/k8s` : Manifestes Kubernetes pour le déploiement et le monitoring.
-* `Jenkinsfile` : Pipeline CI/CD automatisé.
+* `/src`: Java source code for the backend.
+* `/frontend`: React application.
+* `/k8s`: Kubernetes manifests for deployment and monitoring.
+* `Jenkinsfile`: Automated CI/CD pipeline.
+
+---
